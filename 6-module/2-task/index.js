@@ -21,6 +21,7 @@ export default class ProductCard {
     </div>
     `
   }
+
   #render() {
     this.elem = createElement(this.#template());
     this.elem.querySelector('.card__image').src = `/assets/images/products/${this.product.image}`;

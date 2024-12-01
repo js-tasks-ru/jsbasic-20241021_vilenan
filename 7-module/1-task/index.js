@@ -13,7 +13,6 @@ export default class RibbonMenu {
 
     this.arrowRightEl.addEventListener('click', () => {
       this.innerEl.scrollBy(350,0);
-
     });
 
     this.arrowLeftEl.addEventListener('click', () => {

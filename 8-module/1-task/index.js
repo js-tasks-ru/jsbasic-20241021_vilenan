@@ -5,6 +5,7 @@ export default class CartIcon {
     this.render();
 
     this.addEventListeners();
+    this.initialTopCoord = null;
   }
 
   render() {
@@ -39,6 +40,46 @@ export default class CartIcon {
   }
 
   updatePosition() {
-    // ваш код ...
+    // получаем ширину и высоту корзины
+    const {offsetHeight, offsetWidth } = this.elem;
+
+    if(offsetHeight && offsetWidth) {
+      // получаем начальное положение
+      if (this.initialTopCoord === null) {
+        this.initialTopCoord = this.elem.getBoundingClientRect().top + window.pageYOffset;
+      }
+
+      console.log('прокрутка', window.pageYOffset);
+      console.log('начальное положение', this.initialTopCoord);
+
+      const { clientWidth } = document.documentElement;
+
+      console.log('боковые параметры', document.querySelector('.container').getBoundingClientRect().right + 20, clientWidth - this.elem.offsetWidth - 10);
+      if(clientWidth > 768) {
+        if (window.pageYOffset > this.initialTopCoord) {
+          let leftIndent = Math.min(
+            document.querySelector('.container').getBoundingClientRect().right + 20,
+            document.documentElement.clientWidth - this.elem.offsetWidth - 10
+          ) + 'px';
+          Object.assign(this.elem.style, {
+            position: 'fixed',
+            top: '50px',
+            zIndex: 1e3,
+            right: '10px',
+            left: leftIndent
+          });
+        } else {
+          Object.assign(this.elem.style, {
+            position: '',
+            top: '',
+            left: '',
+            zIndex: ''
+          });
+        }
+      }
+
+
+    }
+
   }
 }

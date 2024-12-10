@@ -14,9 +14,8 @@ export default class Cart {
 
   addProduct(product) {
     if (!product) {
-      return; // Если product равен null или не передан, выходим из метода
+      return;
     }
-    // Ищем товар в корзине по id
     const existingCartItem = this.cartItems.find(item => item.product.id === product.id);
 
     if(existingCartItem) {
@@ -32,14 +31,11 @@ export default class Cart {
   }
 
   updateProductCount(productId, amount) {
-    // Ищем товар в корзине по id
     const updateCartItem = this.cartItems.find(item => item.product.id === productId);
 
     if (updateCartItem) {
-      // Обновляем количество товара
       updateCartItem.count += amount;
 
-      // Если количество стало 0 или меньше, удаляем товар из корзины
       if (updateCartItem.count <= 0) {
         this.cartItems = this.cartItems.filter(item => item.product.id !== productId);
         this.modal.elem.querySelector(`[data-product-id="${productId}"]`).remove();
@@ -152,29 +148,22 @@ export default class Cart {
   }
 
   onProductUpdate(cartItem) {
-    //обновляем иконку корзины
+
     this.cartIcon.update(this);
-    // Обновлять верстку нужно только том случае, если модальное окно с корзиной открыто. Определить это можно по наличию класса is-modal-open на элементе body.
+
       if(document.body.classList.contains('is-modal-open')) {
-        // Если в корзине не осталось ни одного товара, например, был один такой товар в единственном экземпляре,
-        //   и мы уменьшили его количество на единицу, то ничего обновлять не надо, нужно просто закрыть модальное окно.
+
         if(!this.getTotalCount()) {
           this.modal.close();
           return;
         }
 
         let productId = cartItem.product.id;
-
-// Элемент, который хранит количество товаров с таким productId в корзине
         let productCount = this.modal.elem.querySelector(`[data-product-id="${productId}"] .cart-counter__count`);
-
-// Элемент с общей стоимостью всех единиц этого товара
         let productPrice = this.modal.elem.querySelector(`[data-product-id="${productId}"] .cart-product__price`);
-
-// Элемент с суммарной стоимостью всех товаров
         let infoPrice = this.modal.elem.querySelector(`.cart-buttons__info-price`);
 
-          if(productCount) productCount.innerHTML = cartItem.count;
+        if(productCount) productCount.innerHTML = cartItem.count;
 
         if(productPrice) productPrice.innerHTML = `€${(cartItem.product.price * cartItem.count).toFixed(2)}`;
 
@@ -194,7 +183,6 @@ export default class Cart {
         body: formData
       })
 
-      // Проверяем успешность запроса
         if (response.ok) {
           this.modal.setTitle('Success!');
           this.modal.setBody(createElement(`<div class="modal__body-inner">

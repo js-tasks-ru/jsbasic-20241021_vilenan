@@ -49,12 +49,8 @@ export default class CartIcon {
         this.initialTopCoord = this.elem.getBoundingClientRect().top + window.pageYOffset;
       }
 
-      console.log('прокрутка', window.pageYOffset);
-      console.log('начальное положение', this.initialTopCoord);
-
       const { clientWidth } = document.documentElement;
 
-      console.log('боковые параметры', document.querySelector('.container').getBoundingClientRect().right + 20, clientWidth - this.elem.offsetWidth - 10);
       if(clientWidth > 768) {
         if (window.pageYOffset > this.initialTopCoord) {
           let leftIndent = Math.min(

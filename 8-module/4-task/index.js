@@ -5,7 +5,7 @@ import Modal from '../../7-module/2-task/index.js';
 
 export default class Cart {
   cartItems = []; // [product: {...}, count: N]
-
+  modal;
   constructor(cartIcon) {
     this.cartIcon = cartIcon;
 
@@ -13,23 +13,48 @@ export default class Cart {
   }
 
   addProduct(product) {
-    // СКОПИРУЙТЕ СЮДЯ СВОЙ КОД
+    if (!product) {
+      return;
+    }
+    const existingCartItem = this.cartItems.find(item => item.product.id === product.id);
+
+    if(existingCartItem) {
+      existingCartItem.count += 1;
+    } else {
+      const newCartItem = {
+        product: product,
+        count: 1
+      };
+      this.onProductUpdate(existingCartItem);
+      this.cartItems.push(newCartItem);
+    }
   }
 
   updateProductCount(productId, amount) {
-    // СКОПИРУЙТЕ СЮДЯ СВОЙ КОД
+    const updateCartItem = this.cartItems.find(item => item.product.id === productId);
+
+    if (updateCartItem) {
+      updateCartItem.count += amount;
+
+      if (updateCartItem.count <= 0) {
+        this.cartItems = this.cartItems.filter(item => item.product.id !== productId);
+        this.modal.elem.querySelector(`[data-product-id="${productId}"]`).remove();
+      }
+
+      this.onProductUpdate(updateCartItem);
+    }
   }
 
   isEmpty() {
-    // СКОПИРУЙТЕ СЮДЯ СВОЙ КОД
+    return this.cartItems.length === 0;
   }
 
   getTotalCount() {
-    // СКОПИРУЙТЕ СЮДЯ СВОЙ КОД
+    return this.cartItems.reduce((total, item) => total + item.count, 0)
   }
 
   getTotalPrice() {
-    // СКОПИРУЙТЕ СЮДЯ СВОЙ КОД
+    return this.cartItems.reduce((total, item) => total + item.product.price * item.count, 0)
   }
 
   renderProduct(product, count) {
@@ -84,17 +109,97 @@ export default class Cart {
   }
 
   renderModal() {
-    // ...ваш код
+    let modal = new Modal();
+    this.modal = modal;
+    modal.setTitle('Your order');
+    const modalBody = document.createElement('div');
+
+    this.cartItems.forEach(({product, count}) => {
+      const productCard = this.renderProduct(product, count);
+      const buttonMinus = productCard.querySelector('.cart-counter__button_minus');
+      const buttonPlus = productCard.querySelector('.cart-counter__button_plus');
+
+      buttonMinus.addEventListener('click', (evt) => {
+        const clickedProduct = evt.target.closest('.cart-product');
+        const clickedProductId = clickedProduct.dataset.productId;
+        const clickedProductAmount = parseInt(clickedProduct.querySelector('.cart-counter__count').textContent);
+        this.updateProductCount(clickedProductId,-1);
+      });
+
+      buttonPlus.addEventListener('click', (evt) => {
+        const clickedProduct = evt.target.closest('.cart-product');
+        const clickedProductId = clickedProduct.dataset.productId;
+        const clickedProductAmount = parseInt(clickedProduct.querySelector('.cart-counter__count').textContent);
+        this.updateProductCount(clickedProductId, 1);
+      })
+      modalBody.append(productCard);
+    });
+
+    const modalForm = this.renderOrderForm();
+    modalBody.append(modalForm);
+
+    modal.setBody(modalBody);
+    const form = this.modal.elem.querySelector('.cart-form');
+
+    form.addEventListener('submit', (event) => {
+      this.onSubmit(event);
+    })
+    modal.open();
   }
 
   onProductUpdate(cartItem) {
-    // ...ваш код
 
     this.cartIcon.update(this);
+
+      if(document.body.classList.contains('is-modal-open')) {
+
+        if(!this.getTotalCount()) {
+          this.modal.close();
+          return;
+        }
+
+        let productId = cartItem.product.id;
+        let productCount = this.modal.elem.querySelector(`[data-product-id="${productId}"] .cart-counter__count`);
+        let productPrice = this.modal.elem.querySelector(`[data-product-id="${productId}"] .cart-product__price`);
+        let infoPrice = this.modal.elem.querySelector(`.cart-buttons__info-price`);
+
+        if(productCount) productCount.innerHTML = cartItem.count;
+
+        if(productPrice) productPrice.innerHTML = `€${(cartItem.product.price * cartItem.count).toFixed(2)}`;
+
+        if(infoPrice) infoPrice.innerHTML = `€${this.getTotalPrice().toFixed(2)}`;
+      }
   }
 
-  onSubmit(event) {
-    // ...ваш код
+  async onSubmit(event) {
+    event.preventDefault();
+    const submitButton = this.modal.elem.querySelector('button[type="submit"]');
+    submitButton.classList.add('is-loading');
+
+    try {
+      const formData = new FormData(event.target);
+      let response = await fetch('https://httpbin.org/post', {
+        method: 'POST',
+        body: formData
+      })
+
+        if (response.ok) {
+          this.modal.setTitle('Success!');
+          this.modal.setBody(createElement(`<div class="modal__body-inner">
+          <p>
+            Order successful! Your order is being cooked :) <br>
+            We’ll notify you about delivery time shortly.<br>
+            <img src="/assets/images/delivery.gif">
+          </p>
+        </div>`));
+
+          this.cartItems = [];
+        } else {
+          throw new Error('Network response was not ok.');
+        }
+      } catch (error) {
+        console.error('There was a problem with the fetch operation:', error);
+      }
   };
 
   addEventListeners() {
